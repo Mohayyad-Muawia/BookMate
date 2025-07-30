@@ -1,19 +1,27 @@
 package views;
 
 import javax.swing.*;
-
-import components.PrimaryButton;
-import components.Theme;
-
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import components.MyTextField;
+import components.PrimaryButton;
+import components.Theme;
 import db.DatabaseConnection;
 import models.Book;
 import models.User;
 
 public class BookList extends JFrame {
+    private String placeholder = "Search books by title or author...";
     private User currentUser;
     private JLabel totalLabel, finishedLabel, readingLabel, onholdLabel;
+    private MyTextField searchField;
+    private JPanel cardsPanel;
+    private List<Book> allBooks = new ArrayList<>();
 
     public BookList() {
         setTitle("BookMate | My Books");
@@ -22,15 +30,66 @@ public class BookList extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
         setBackground(Theme.BACKGROUND);
-
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
     }
 
     public void initialize(User user) {
         this.currentUser = user;
 
-        JPanel cardsPanel = new JPanel();
+        // --- Search Bar ---
+        JPanel searchPanel = new JPanel(new BorderLayout(10, 10));
+        searchPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        searchPanel.setBackground(Theme.BACKGROUND);
+
+        searchField = new MyTextField();
+        searchField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        searchField.setPreferredSize(new Dimension(300, 35));
+        searchField.setToolTipText("Search by title or author...");
+        searchField.setBackground(Theme.INPUT_BG);
+        searchField.setForeground(Theme.INPUT_TEXT);
+
+        // Placeholder text
+        searchField.setText(placeholder);
+        searchField.setForeground(Color.GRAY);
+
+        searchField.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                if (searchField.getText().equals(placeholder)) {
+                    searchField.setText("");
+                    searchField.setForeground(Color.BLACK); // أو Theme.INPUT_TEXT لو عندك ثيم
+                }
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                if (searchField.getText().isEmpty()) {
+                    searchField.setText(placeholder);
+                    searchField.setForeground(Color.GRAY);
+                }
+            }
+        });
+
+        // Fillter the books
+        searchField.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) {
+                filterBooks();
+            }
+
+            public void removeUpdate(DocumentEvent e) {
+                filterBooks();
+            }
+
+            public void changedUpdate(DocumentEvent e) {
+                filterBooks();
+            }
+        });
+
+        searchPanel.add(searchField, BorderLayout.CENTER);
+        add(searchPanel, BorderLayout.NORTH);
+
+        // --- Cards Panel ---
+        cardsPanel = new JPanel();
         cardsPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 15));
         cardsPanel.setBackground(Theme.BACKGROUND);
 
@@ -38,7 +97,6 @@ public class BookList extends JFrame {
         scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
-        cardsPanel.setPreferredSize(null);
         try {
             Connection conn = DatabaseConnection.getConnection();
             String sql = "SELECT * FROM books WHERE user_id = ?";
@@ -46,6 +104,7 @@ public class BookList extends JFrame {
             stmt.setInt(1, currentUser.getId());
             ResultSet rs = stmt.executeQuery();
 
+            allBooks.clear();
             while (rs.next()) {
                 Book book = new Book();
                 book.setId(rs.getInt("id"));
@@ -59,25 +118,26 @@ public class BookList extends JFrame {
                 book.setReminderDate(rs.getString("reminder_date"));
                 book.setUserId(rs.getInt("user_id"));
 
-                cardsPanel.add(new components.BookCard(book));
+                allBooks.add(book);
             }
 
             rs.close();
             stmt.close();
+
+            filterBooks();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         add(scroll, BorderLayout.CENTER);
 
-        // Sidebar
+        // --- Sidebar ---
         JPanel sidebar = new JPanel();
         sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
         sidebar.setPreferredSize(new Dimension(250, getHeight()));
         sidebar.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         sidebar.setBackground(Theme.INPUT_BG);
 
-        // Stats label
         JPanel statsPanel = new JPanel();
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
         statsPanel.setOpaque(false);
@@ -106,7 +166,6 @@ public class BookList extends JFrame {
         onholdLabel.setFont(labelFont);
         onholdLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Add Labels to Panel
         statsPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         statsPanel.add(totalLabel);
         statsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
@@ -116,7 +175,6 @@ public class BookList extends JFrame {
         statsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         statsPanel.add(onholdLabel);
 
-        // Back button
         JButton backButton = new PrimaryButton("⬅   Back to Dashboard");
         backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         backButton.setFont(new Font(Theme.MAIN_FONT.getName(), Font.PLAIN, 15));
@@ -126,18 +184,35 @@ public class BookList extends JFrame {
             new Dashboard().initialize(user);
         });
 
-        // Add to sidebar
         sidebar.add(statsPanel);
         sidebar.add(Box.createVerticalGlue());
         sidebar.add(backButton);
 
-        // Load table and stats
-        loadBooks(user.getId());
-
-        // Add panels to frame
         add(sidebar, BorderLayout.WEST);
 
+        // Load Stats
+        loadBooks(user.getId());
+
         setVisible(true);
+    }
+
+    private void filterBooks() {
+        String query = searchField.getText().trim().toLowerCase();
+        if (query.isEmpty() || query.equals(placeholder)) {
+            query = "";
+        }
+
+        cardsPanel.removeAll();
+
+        for (Book book : allBooks) {
+            if (book.getTitle().toLowerCase().contains(query) ||
+                    book.getAuthor().toLowerCase().contains(query)) {
+                cardsPanel.add(new components.BookCard(book));
+            }
+        }
+
+        cardsPanel.revalidate();
+        cardsPanel.repaint();
     }
 
     private void loadBooks(int userId) {
@@ -148,7 +223,7 @@ public class BookList extends JFrame {
 
         try {
             Connection conn = DatabaseConnection.getConnection();
-            String sql = "SELECT id, title, author, status, current_page, reminder_date FROM books WHERE user_id = ?";
+            String sql = "SELECT status FROM books WHERE user_id = ?";
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
@@ -162,21 +237,11 @@ public class BookList extends JFrame {
                     inProgress++;
                 else
                     notStarted++;
-
-                Object[] row = {
-                        rs.getInt("id"),
-                        rs.getString("title"),
-                        rs.getString("author"),
-                        status,
-                        rs.getInt("current_page"),
-                        rs.getString("reminder_date")
-                };
             }
 
             rs.close();
             stmt.close();
 
-            // Show stats
             totalLabel.setText("Total Books: " + total);
             finishedLabel.setText("Completed: " + finished);
             readingLabel.setText("Reading: " + inProgress);
@@ -205,7 +270,7 @@ public class BookList extends JFrame {
 
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "✅ Book removed successfully!");
-                refresh(); // refresh BookList
+                refresh();
             } else {
                 JOptionPane.showMessageDialog(this, "❌ Failed to remove book.");
             }

@@ -13,45 +13,48 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import db.DatabaseConnection;
-import models.User;
 
-public class LoginPage extends JFrame {
+public class Register extends JFrame {
+
+    private MyTextField fullnameField;
     private MyTextField usernameField;
     private MyPassField passwordField;
 
-    public LoginPage() {
-        setTitle("BookMate | Login");
+    public Register() {
+        setTitle("BookMate | Register");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        setSize(300, 320);
+        setSize(300, 380);
         setLocationRelativeTo(null);
         setResizable(false);
         setVisible(true);
 
-        // make the form components
+        fullnameField = new MyTextField();
         usernameField = new MyTextField();
         passwordField = new MyPassField();
+
+        JLabel fullLabel = new JLabel("Full Name:");
         JLabel userLabel = new JLabel("Username:");
         JLabel passLabel = new JLabel("Password:");
 
-        JButton loginButton = new PrimaryButton("Login");
-        JButton registerButton = new SecondaryButton("Register New");
+        JButton registerButton = new PrimaryButton("Register");
+        JButton loginButton = new SecondaryButton("Login Instead");
         JPanel buttonPanel = new JPanel();
         JPanel formPanel = new JPanel();
 
-        // Style the components:-
-        // FONT
+        // Styling
+        fullnameField.setFont(Theme.MAIN_FONT);
         usernameField.setFont(Theme.MAIN_FONT);
         passwordField.setFont(Theme.MAIN_FONT);
-        loginButton.setFont(Theme.MAIN_FONT);
         registerButton.setFont(Theme.MAIN_FONT);
 
-        // COLORS
+        fullnameField.setBackground(Theme.INPUT_BG);
+        fullnameField.setForeground(Theme.FOREGROUND);
         usernameField.setBackground(Theme.INPUT_BG);
         usernameField.setForeground(Theme.FOREGROUND);
         passwordField.setBackground(Theme.INPUT_BG);
         passwordField.setForeground(Theme.FOREGROUND);
 
-        // SIZE
+        fullnameField.setMaximumSize(new Dimension(200, 40));
         usernameField.setMaximumSize(new Dimension(200, 40));
         passwordField.setMaximumSize(new Dimension(200, 40));
 
@@ -63,115 +66,99 @@ public class LoginPage extends JFrame {
         formPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        registerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        buttonPanel.add(loginButton);
-        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         buttonPanel.add(registerButton);
+        buttonPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        buttonPanel.add(loginButton);
 
-        // Center everything
+        fullLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         userLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         passLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        fullnameField.setAlignmentX(Component.CENTER_ALIGNMENT);
         usernameField.setAlignmentX(Component.CENTER_ALIGNMENT);
         passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.setMaximumSize(new Dimension(220, 100));
 
+        // Add components
+        formPanel.add(fullLabel);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        formPanel.add(fullnameField);
+        formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
         formPanel.add(userLabel);
         formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         formPanel.add(usernameField);
         formPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
         formPanel.add(passLabel);
         formPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         formPanel.add(passwordField);
         formPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+
         formPanel.add(buttonPanel);
 
-        // Action Listener
-        loginButton.addActionListener(e -> loginUser());
-        registerButton.addActionListener(e -> {
-            dispose(); // close login window
-            new Register(); // open register window
+        // Event handler
+        registerButton.addActionListener(e -> registerUser());
+        loginButton.addActionListener(e -> {
+            dispose(); // Close register page
+            new LoginPage(); // Open login page
         });
 
         add(formPanel, BorderLayout.CENTER);
         setVisible(true);
     }
 
-    private void loginUser() {
-        User user = null;
+    private void registerUser() {
+        String fullname = fullnameField.getText().trim();
         String username = usernameField.getText().trim().toLowerCase();
         String password = new String(passwordField.getPassword()).trim();
 
-        if (username.isEmpty() || password.isEmpty()) {
+        if (fullname.isEmpty() || username.isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.");
             return;
         }
 
         try {
             Connection conn = DatabaseConnection.getConnection();
-            String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setString(1, username);
-            stmt.setString(2, password);
-            ResultSet rs = stmt.executeQuery();
+
+            // Check if username already exists
+            String checkSql = "SELECT * FROM users WHERE username = ?";
+            PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+            checkStmt.setString(1, username);
+            ResultSet rs = checkStmt.executeQuery();
 
             if (rs.next()) {
-                // create the user
-                user = new User(
-                        rs.getInt("id"),
-                        rs.getString("fullname"),
-                        rs.getString("username"),
-                        rs.getString("password"));
-
-                dispose(); // close login window
-                // open the next screen
-                Dashboard dash = new Dashboard();
-                dash.initialize(user);
-                showTodayReminders(user);
-            } else {
-                JOptionPane.showMessageDialog(this, "Invalid username or password.");
+                JOptionPane.showMessageDialog(this, "Username already exists. Choose a different one.");
+                rs.close();
+                checkStmt.close();
+                return;
             }
-
             rs.close();
-            stmt.close();
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
-        }
-    }
+            checkStmt.close();
 
-    private void showTodayReminders(User user) {
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
-
-            String sql = "SELECT title FROM books WHERE user_id = ? AND reminder_date = ?";
+            // Insert new user
+            String sql = "INSERT INTO users (fullname, username, password) VALUES (?, ?, ?)";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, user.getId());
-            stmt.setString(2, today);
-            ResultSet rs = stmt.executeQuery();
+            stmt.setString(1, fullname);
+            stmt.setString(2, username);
+            stmt.setString(3, password);
 
-            StringBuilder reminders = new StringBuilder();
-            while (rs.next()) {
-                reminders.append(rs.getString("title")).append("\n");
-            }
-
-            rs.close();
+            int rows = stmt.executeUpdate();
             stmt.close();
 
-            if (reminders.length() > 0) {
-                JOptionPane.showMessageDialog(this,
-                        "⏰ Books with reminders for today:\n\n" + reminders.toString(),
-                        "Today's Reminders",
-                        JOptionPane.INFORMATION_MESSAGE);
+            if (rows > 0) {
+                JOptionPane.showMessageDialog(this, "✅ Account created successfully!");
+                dispose(); // Close register page
+                new LoginPage(); // Go to login
+            } else {
+                JOptionPane.showMessageDialog(this, "❌ Failed to create account.");
             }
 
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "❌ Error checking reminders: " + e.getMessage());
+            JOptionPane.showMessageDialog(this, "❌ Error: " + e.getMessage());
         }
     }
-
 }

@@ -112,6 +112,7 @@ public class LoginPage extends JFrame {
                 // open the next screen
                 Dashboard dash = new Dashboard();
                 dash.initialize(user);
+                showTodayReminders(user);
             } else {
                 JOptionPane.showMessageDialog(this, "Invalid username or password.");
             }
@@ -120,6 +121,37 @@ public class LoginPage extends JFrame {
             stmt.close();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
+    }
+
+    private void showTodayReminders(User user) {
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            String today = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date());
+
+            String sql = "SELECT title FROM books WHERE user_id = ? AND reminder_date = ?";
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, user.getId());
+            stmt.setString(2, today);
+            ResultSet rs = stmt.executeQuery();
+
+            StringBuilder reminders = new StringBuilder();
+            while (rs.next()) {
+                reminders.append(rs.getString("title")).append("\n");
+            }
+
+            rs.close();
+            stmt.close();
+
+            if (reminders.length() > 0) {
+                JOptionPane.showMessageDialog(this,
+                        "⏰ Books with reminders for today:\n\n" + reminders.toString(),
+                        "Today's Reminders",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "❌ Error checking reminders: " + e.getMessage());
         }
     }
 

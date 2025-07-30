@@ -1,7 +1,6 @@
 package views;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 
 import components.PrimaryButton;
 import components.Theme;
@@ -13,7 +12,6 @@ import models.Book;
 import models.User;
 
 public class BookList extends JFrame {
-    private JLabel statsLabel;
     private User currentUser;
     private JLabel totalLabel, finishedLabel, readingLabel, onholdLabel;
 

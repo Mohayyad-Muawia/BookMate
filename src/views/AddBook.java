@@ -110,7 +110,7 @@ public class AddBook extends JFrame {
         updateVisibility();
     }
 
-    private Font formFont = new Font("Segoe UI", Font.PLAIN, 16); // حجم خط 16، ممكن تغير الحجم
+    private Font formFont = new Font("Segoe UI", Font.PLAIN, 16);
 
     private JPanel createField(String labelText, MyTextField field) {
         JPanel panel = new JPanel();
@@ -120,11 +120,11 @@ public class AddBook extends JFrame {
         panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel label = new JLabel(labelText);
-        label.setFont(formFont); // تعيين حجم الخط للليبل
+        label.setFont(formFont);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        field.setFont(formFont); // تعيين حجم الخط لحقل الإدخال
-        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35)); // شوي أكبر عشان يناسب الخط
+        field.setFont(formFont);
+        field.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
         field.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         panel.add(label);
@@ -144,14 +144,14 @@ public class AddBook extends JFrame {
         label.setFont(formFont);
         label.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        area.setFont(formFont); // حجم الخط لنص الـ TextArea
+        area.setFont(formFont);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
         area.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         JScrollPane scroll = new JScrollPane(area);
         scroll.setAlignmentX(Component.LEFT_ALIGNMENT);
-        scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100)); // ارتفاع أكبر ليناسب الخط
+        scroll.setMaximumSize(new Dimension(Integer.MAX_VALUE, 100));
 
         panel.add(label);
         panel.add(Box.createRigidArea(new Dimension(0, 5)));

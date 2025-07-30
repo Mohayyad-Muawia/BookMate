@@ -12,7 +12,8 @@ public class BookCard extends JPanel {
     public BookCard(Book book) {
 
         Color statusColor = getStatusColor(book.getStatus());
-        // استخدم BorderLayout عشان نقدر نحط textPanel في النص تماماً
+
+        // Card Layout
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(250, 250));
         setBackground(Color.WHITE);
@@ -35,7 +36,7 @@ public class BookCard extends JPanel {
         JLabel status = new JLabel(book.getStatus());
         status.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // Panel لتجميع الليبلات عمودياً وفي النص
+        // Text Panel to hold the labels
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setBackground(Theme.INPUT_BG);
@@ -46,10 +47,8 @@ public class BookCard extends JPanel {
         textPanel.add(author);
         textPanel.add(Box.createVerticalGlue());
 
-        // حط textPanel في وسط الكارد
         add(textPanel, BorderLayout.CENTER);
 
-        // لما يضغط على الكارد يفتح BookDetails
         addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 new BookDetails(book, (BookList) SwingUtilities.getWindowAncestor(BookCard.this));

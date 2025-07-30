@@ -103,8 +103,8 @@ public class Register extends JFrame {
         // Event handler
         registerButton.addActionListener(e -> registerUser());
         loginButton.addActionListener(e -> {
-            dispose(); // Close register page
-            new LoginPage(); // Open login page
+            dispose();
+            new LoginPage();
         });
 
         add(formPanel, BorderLayout.CENTER);
@@ -151,8 +151,8 @@ public class Register extends JFrame {
 
             if (rows > 0) {
                 JOptionPane.showMessageDialog(this, "✅ Account created successfully!");
-                dispose(); // Close register page
-                new LoginPage(); // Go to login
+                dispose();
+                new LoginPage();
             } else {
                 JOptionPane.showMessageDialog(this, "❌ Failed to create account.");
             }

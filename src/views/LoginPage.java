@@ -93,8 +93,8 @@ public class LoginPage extends JFrame {
         // Action Listener
         loginButton.addActionListener(e -> loginUser());
         registerButton.addActionListener(e -> {
-            dispose(); // close login window
-            new Register(); // open register window
+            dispose();
+            new Register();
         });
 
         add(formPanel, BorderLayout.CENTER);
@@ -127,7 +127,7 @@ public class LoginPage extends JFrame {
                         rs.getString("username"),
                         rs.getString("password"));
 
-                dispose(); // close login window
+                dispose();
                 // open the next screen
                 Dashboard dash = new Dashboard();
                 dash.initialize(user);
@@ -164,7 +164,7 @@ public class LoginPage extends JFrame {
 
             if (reminders.length() > 0) {
                 JOptionPane.showMessageDialog(this,
-                        "⏰ Books with reminders for today:\n\n" + reminders.toString(),
+                        "Books with reminders for today:\n\n" + reminders.toString(),
                         "Today's Reminders",
                         JOptionPane.INFORMATION_MESSAGE);
             }

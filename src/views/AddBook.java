@@ -42,12 +42,12 @@ public class AddBook extends JFrame {
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
         formPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
-        // مهم: تحديد الحجم ووسطته أفقياً
+        // Center the form
         formPanel.setPreferredSize(new Dimension(500, 600));
         formPanel.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         formPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        // إضافة الحقول
+        // Making the Labels
         formPanel.add(createField("Title:", titleField = new MyTextField()));
         formPanel.add(createField("Author:", authorField = new MyTextField()));
         formPanel.add(createField("Category:", categoryField = new MyTextField()));

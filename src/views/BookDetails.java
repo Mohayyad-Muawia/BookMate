@@ -1,4 +1,3 @@
-// --- BookDetails.java ---
 package views;
 
 import javax.swing.*;
@@ -13,7 +12,7 @@ import models.Book;
 
 public class BookDetails extends JFrame {
     private Book book;
-    private BookList bookList; // reference to BookList for refreshing
+    private BookList bookList;
 
     private JTextField titleField;
     private JTextField authorField;
